@@ -1,64 +1,1067 @@
 {
   "elements": {
-    "red":    { "name": "Rot",     "color": "#ff3b4e", "beats": "green" },
-    "green":  { "name": "Grün",    "color": "#34e07f", "beats": "blue" },
-    "blue":   { "name": "Blau",    "color": "#3b8bff", "beats": "red" },
-    "yellow": { "name": "Gelb",    "color": "#ffd23b", "beats": "purple" },
-    "purple": { "name": "Violett", "color": "#b455ff", "beats": "yellow" }
+    "red": {
+      "name": "Rot",
+      "color": "#ff3b4e",
+      "beats": "green"
+    },
+    "green": {
+      "name": "Grün",
+      "color": "#34e07f",
+      "beats": "blue"
+    },
+    "blue": {
+      "name": "Blau",
+      "color": "#3b8bff",
+      "beats": "red"
+    },
+    "yellow": {
+      "name": "Gelb",
+      "color": "#ffd23b",
+      "beats": "purple"
+    },
+    "purple": {
+      "name": "Violett",
+      "color": "#b455ff",
+      "beats": "yellow"
+    }
   },
   "cardTypes": {
-    "melee":   { "label": "Nahkampf",         "cost": 2,   "p": 1.0 },
-    "ranged":  { "label": "Fernkampf",        "cost": 1.5, "p": 0.85 },
-    "special": { "label": "Spezial-Art",      "cost": 4,   "p": 1.9 },
-    "main":    { "label": "Haupt-Fähigkeit",  "cost": 6,   "p": 2.8 }
+    "melee": {
+      "label": "Nahkampf",
+      "cost": 2,
+      "p": 1.0
+    },
+    "ranged": {
+      "label": "Fernkampf",
+      "cost": 1.5,
+      "p": 0.85
+    },
+    "special": {
+      "label": "Spezial-Art",
+      "cost": 4,
+      "p": 1.9
+    },
+    "main": {
+      "label": "Haupt-Fähigkeit",
+      "cost": 6,
+      "p": 2.8
+    }
   },
   "chars": [
-    { "id": "kael",  "name": "Kael",   "title": "Aschenklinge",        "el": "red",    "rar": "N", "hp": 9000,  "atk": 1500, "def": 900,
-      "arts": { "melee": "Glutfaust", "ranged": "Aschenpfeil", "special": "Kraterschlag", "main": "Inferno-Zitadelle" }, "z": { "stat": "atk", "v": 0.05 } },
-    { "id": "mira",  "name": "Mira",   "title": "Gezeitenwächterin",   "el": "blue",   "rar": "N", "hp": 9400,  "atk": 1400, "def": 950,
-      "arts": { "melee": "Gezeitenstoß", "ranged": "Eissplitter", "special": "Tiefsee-Sog", "main": "Tsunami-Requiem" }, "z": { "stat": "hp", "v": 0.06 } },
-    { "id": "thorn", "name": "Thorn",  "title": "Waldbrecher",         "el": "green",  "rar": "N", "hp": 9800,  "atk": 1350, "def": 1000,
-      "arts": { "melee": "Rindenbrecher", "ranged": "Dornenschuss", "special": "Wurzelsturm", "main": "Urwald-Zorn" }, "z": { "stat": "def", "v": 0.06 } },
-    { "id": "solis", "name": "Solis",  "title": "Funkenläufer",        "el": "yellow", "rar": "N", "hp": 8800,  "atk": 1550, "def": 850,
-      "arts": { "melee": "Funkenkick", "ranged": "Blitzpfeil", "special": "Gleißende Lanze", "main": "Sonnenbruch" }, "z": { "stat": "atk", "v": 0.05 } },
-    { "id": "nyx",   "name": "Nyx",    "title": "Schattenpilger",      "el": "purple", "rar": "N", "hp": 9100,  "atk": 1480, "def": 880,
-      "arts": { "melee": "Schattenhieb", "ranged": "Nachtgeschoss", "special": "Leeren-Riss", "main": "Umbra-Kollaps" }, "z": { "stat": "hp", "v": 0.06 } },
-    { "id": "brann", "name": "Brann",  "title": "Eisenfaust",          "el": "red",    "rar": "N", "hp": 10200, "atk": 1300, "def": 1100,
-      "arts": { "melee": "Eisenschlag", "ranged": "Schmiedefunke", "special": "Hammerfall", "main": "Magma-Bastion" }, "z": { "stat": "def", "v": 0.06 } },
-
-    { "id": "lyra",  "name": "Lyra",   "title": "Sternenweberin",      "el": "blue",   "rar": "R", "hp": 10500, "atk": 1750, "def": 1000,
-      "arts": { "melee": "Sternenschnitt", "ranged": "Kometensplitter", "special": "Konstellationsriss", "main": "Sternenweber-Finale" }, "z": { "stat": "atk", "v": 0.08 } },
-    { "id": "orin",  "name": "Orin",   "title": "Dornenkönig",         "el": "green",  "rar": "R", "hp": 11200, "atk": 1650, "def": 1100,
-      "arts": { "melee": "Dornenhieb", "ranged": "Giftpfeil", "special": "Weltenbaum-Peitsche", "main": "Dornenkönigs-Dekret" }, "z": { "stat": "hp", "v": 0.08 } },
-    { "id": "zeph",  "name": "Zeph",   "title": "Blitzprophet",        "el": "yellow", "rar": "R", "hp": 10000, "atk": 1850, "def": 950,
-      "arts": { "melee": "Donnerhand", "ranged": "Kettenblitz", "special": "Himmelsgabel", "main": "Prophezeiter Blitz" }, "z": { "stat": "atk", "v": 0.08 } },
-    { "id": "vael",  "name": "Vael",   "title": "Leerenflüsterer",     "el": "purple", "rar": "R", "hp": 10800, "atk": 1700, "def": 1050,
-      "arts": { "melee": "Schleierhieb", "ranged": "Flüsterblitz", "special": "Entropie-Welle", "main": "Stille der Leere" }, "z": { "stat": "def", "v": 0.08 } },
-
-    { "id": "ignar", "name": "Ignar",  "title": "Zitadellen-Tyrann",   "el": "red",    "rar": "U", "hp": 12500, "atk": 2150, "def": 1200,
-      "arts": { "melee": "Tyrannenfaust", "ranged": "Zitadellenfeuer", "special": "Thron aus Asche", "main": "Sonnenschmelze" }, "z": { "stat": "atk", "v": 0.12 } },
-    { "id": "x7",    "name": "X-7",    "title": "Cyber-Legende",       "el": "blue",   "rar": "U", "hp": 12000, "atk": 2250, "def": 1150,
-      "arts": { "melee": "Plasma-Schlag", "ranged": "Railgun-Salve", "special": "Overclock-Barrage", "main": "Singularitäts-Protokoll" }, "z": { "stat": "hp", "v": 0.12 } }
+    {
+      "id": "kael",
+      "name": "Kael",
+      "title": "Aschenklinge",
+      "el": "red",
+      "rar": "N",
+      "hp": 9000,
+      "atk": 1500,
+      "def": 900,
+      "arts": {
+        "melee": "Glutfaust",
+        "ranged": "Aschenpfeil",
+        "special": "Kraterschlag",
+        "main": "Inferno-Zitadelle"
+      },
+      "z": {
+        "stat": "atk",
+        "v": 0.05
+      },
+      "look": {
+        "hair": "spike",
+        "weapon": "blade",
+        "cape": false
+      }
+    },
+    {
+      "id": "mira",
+      "name": "Mira",
+      "title": "Gezeitenwächterin",
+      "el": "blue",
+      "rar": "N",
+      "hp": 9400,
+      "atk": 1400,
+      "def": 950,
+      "arts": {
+        "melee": "Gezeitenstoß",
+        "ranged": "Eissplitter",
+        "special": "Tiefsee-Sog",
+        "main": "Tsunami-Requiem"
+      },
+      "z": {
+        "stat": "hp",
+        "v": 0.06
+      },
+      "look": {
+        "hair": "long",
+        "weapon": "orb",
+        "cape": false
+      }
+    },
+    {
+      "id": "thorn",
+      "name": "Thorn",
+      "title": "Waldbrecher",
+      "el": "green",
+      "rar": "N",
+      "hp": 9800,
+      "atk": 1350,
+      "def": 1000,
+      "arts": {
+        "melee": "Rindenbrecher",
+        "ranged": "Dornenschuss",
+        "special": "Wurzelsturm",
+        "main": "Urwald-Zorn"
+      },
+      "z": {
+        "stat": "def",
+        "v": 0.06
+      },
+      "look": {
+        "hair": "helmet",
+        "weapon": "hammer",
+        "build": 1.08
+      }
+    },
+    {
+      "id": "solis",
+      "name": "Solis",
+      "title": "Funkenläufer",
+      "el": "yellow",
+      "rar": "N",
+      "hp": 8800,
+      "atk": 1550,
+      "def": 850,
+      "arts": {
+        "melee": "Funkenkick",
+        "ranged": "Blitzpfeil",
+        "special": "Gleißende Lanze",
+        "main": "Sonnenbruch"
+      },
+      "z": {
+        "stat": "atk",
+        "v": 0.05
+      },
+      "look": {
+        "hair": "mohawk",
+        "weapon": "none",
+        "cape": false,
+        "build": 0.97
+      }
+    },
+    {
+      "id": "nyx",
+      "name": "Nyx",
+      "title": "Schattenpilger",
+      "el": "purple",
+      "rar": "N",
+      "hp": 9100,
+      "atk": 1480,
+      "def": 880,
+      "arts": {
+        "melee": "Schattenhieb",
+        "ranged": "Nachtgeschoss",
+        "special": "Leeren-Riss",
+        "main": "Umbra-Kollaps"
+      },
+      "z": {
+        "stat": "hp",
+        "v": 0.06
+      },
+      "look": {
+        "hair": "hood",
+        "weapon": "blade",
+        "cape": true
+      }
+    },
+    {
+      "id": "brann",
+      "name": "Brann",
+      "title": "Eisenfaust",
+      "el": "red",
+      "rar": "N",
+      "hp": 10200,
+      "atk": 1300,
+      "def": 1100,
+      "arts": {
+        "melee": "Eisenschlag",
+        "ranged": "Schmiedefunke",
+        "special": "Hammerfall",
+        "main": "Magma-Bastion"
+      },
+      "z": {
+        "stat": "def",
+        "v": 0.06
+      },
+      "look": {
+        "hair": "helmet",
+        "weapon": "hammer",
+        "build": 1.12
+      }
+    },
+    {
+      "id": "lyra",
+      "name": "Lyra",
+      "title": "Sternenweberin",
+      "el": "blue",
+      "rar": "R",
+      "hp": 10500,
+      "atk": 1750,
+      "def": 1000,
+      "arts": {
+        "melee": "Sternenschnitt",
+        "ranged": "Kometensplitter",
+        "special": "Konstellationsriss",
+        "main": "Sternenweber-Finale"
+      },
+      "z": {
+        "stat": "atk",
+        "v": 0.08
+      },
+      "look": {
+        "hair": "long",
+        "weapon": "orb",
+        "cape": true
+      }
+    },
+    {
+      "id": "orin",
+      "name": "Orin",
+      "title": "Dornenkönig",
+      "el": "green",
+      "rar": "R",
+      "hp": 11200,
+      "atk": 1650,
+      "def": 1100,
+      "arts": {
+        "melee": "Dornenhieb",
+        "ranged": "Giftpfeil",
+        "special": "Weltenbaum-Peitsche",
+        "main": "Dornenkönigs-Dekret"
+      },
+      "z": {
+        "stat": "hp",
+        "v": 0.08
+      },
+      "look": {
+        "hair": "horns",
+        "weapon": "blade",
+        "cape": true
+      }
+    },
+    {
+      "id": "zeph",
+      "name": "Zeph",
+      "title": "Blitzprophet",
+      "el": "yellow",
+      "rar": "R",
+      "hp": 10000,
+      "atk": 1850,
+      "def": 950,
+      "arts": {
+        "melee": "Donnerhand",
+        "ranged": "Kettenblitz",
+        "special": "Himmelsgabel",
+        "main": "Prophezeiter Blitz"
+      },
+      "z": {
+        "stat": "atk",
+        "v": 0.08
+      },
+      "look": {
+        "hair": "spike",
+        "weapon": "none",
+        "cape": true
+      }
+    },
+    {
+      "id": "vael",
+      "name": "Vael",
+      "title": "Leerenflüsterer",
+      "el": "purple",
+      "rar": "R",
+      "hp": 10800,
+      "atk": 1700,
+      "def": 1050,
+      "arts": {
+        "melee": "Schleierhieb",
+        "ranged": "Flüsterblitz",
+        "special": "Entropie-Welle",
+        "main": "Stille der Leere"
+      },
+      "z": {
+        "stat": "def",
+        "v": 0.08
+      },
+      "look": {
+        "hair": "hood",
+        "weapon": "orb",
+        "cape": true
+      }
+    },
+    {
+      "id": "ignar",
+      "name": "Ignar",
+      "title": "Zitadellen-Tyrann",
+      "el": "red",
+      "rar": "U",
+      "hp": 12500,
+      "atk": 2150,
+      "def": 1200,
+      "arts": {
+        "melee": "Tyrannenfaust",
+        "ranged": "Zitadellenfeuer",
+        "special": "Thron aus Asche",
+        "main": "Sonnenschmelze"
+      },
+      "z": {
+        "stat": "atk",
+        "v": 0.12
+      },
+      "look": {
+        "hair": "horns",
+        "weapon": "hammer",
+        "cape": true,
+        "build": 1.15
+      }
+    },
+    {
+      "id": "x7",
+      "name": "X-7",
+      "title": "Cyber-Legende",
+      "el": "blue",
+      "rar": "U",
+      "hp": 12000,
+      "atk": 2250,
+      "def": 1150,
+      "arts": {
+        "melee": "Plasma-Schlag",
+        "ranged": "Railgun-Salve",
+        "special": "Overclock-Barrage",
+        "main": "Singularitäts-Protokoll"
+      },
+      "z": {
+        "stat": "hp",
+        "v": 0.12
+      },
+      "look": {
+        "hair": "helmet",
+        "weapon": "none",
+        "cape": false,
+        "armor": "#16233a"
+      }
+    },
+    {
+      "id": "garr",
+      "name": "Garr",
+      "title": "Moosfaust",
+      "el": "green",
+      "rar": "N",
+      "hp": 10000,
+      "atk": 1380,
+      "def": 1050,
+      "arts": {
+        "melee": "Moosschlag",
+        "ranged": "Sporenschuss",
+        "special": "Erdbeben-Stampfer",
+        "main": "Titan des Waldes"
+      },
+      "z": {
+        "stat": "def",
+        "v": 0.06
+      },
+      "look": {
+        "hair": "helmet",
+        "weapon": "hammer",
+        "build": 1.1,
+        "armor": "#1d2a22"
+      }
+    },
+    {
+      "id": "ilya",
+      "name": "Ilya",
+      "title": "Funkenbrut",
+      "el": "yellow",
+      "rar": "N",
+      "hp": 8700,
+      "atk": 1560,
+      "def": 840,
+      "arts": {
+        "melee": "Funkenwirbel",
+        "ranged": "Stromstoß",
+        "special": "Kurzschluss",
+        "main": "Gewitterkind"
+      },
+      "z": {
+        "stat": "atk",
+        "v": 0.05
+      },
+      "look": {
+        "hair": "mohawk",
+        "weapon": "none",
+        "cape": false,
+        "build": 0.95
+      }
+    },
+    {
+      "id": "dusk",
+      "name": "Dusk",
+      "title": "Nebelläufer",
+      "el": "purple",
+      "rar": "N",
+      "hp": 9000,
+      "atk": 1470,
+      "def": 900,
+      "arts": {
+        "melee": "Nebelhieb",
+        "ranged": "Schleierpfeil",
+        "special": "Phasen-Sprung",
+        "main": "Dämmerungs-Tanz"
+      },
+      "z": {
+        "stat": "hp",
+        "v": 0.06
+      },
+      "look": {
+        "hair": "hood",
+        "weapon": "blade",
+        "cape": true
+      }
+    },
+    {
+      "id": "coral",
+      "name": "Coral",
+      "title": "Flutkind",
+      "el": "blue",
+      "rar": "N",
+      "hp": 9500,
+      "atk": 1420,
+      "def": 960,
+      "arts": {
+        "melee": "Flutwelle",
+        "ranged": "Perlenschuss",
+        "special": "Strudel",
+        "main": "Kraken-Ruf"
+      },
+      "z": {
+        "stat": "hp",
+        "v": 0.06
+      },
+      "look": {
+        "hair": "long",
+        "weapon": "orb",
+        "cape": false
+      }
+    },
+    {
+      "id": "tyra",
+      "name": "Tyra",
+      "title": "Glutreiterin",
+      "el": "red",
+      "rar": "R",
+      "hp": 10300,
+      "atk": 1800,
+      "def": 980,
+      "arts": {
+        "melee": "Funkenreiter",
+        "ranged": "Glutlanze",
+        "special": "Feuerpeitsche",
+        "main": "Phönix-Charge"
+      },
+      "z": {
+        "stat": "atk",
+        "v": 0.08
+      },
+      "look": {
+        "hair": "long",
+        "weapon": "blade",
+        "cape": true
+      }
+    },
+    {
+      "id": "wren",
+      "name": "Wren",
+      "title": "Windsänger",
+      "el": "green",
+      "rar": "R",
+      "hp": 10600,
+      "atk": 1680,
+      "def": 1060,
+      "arts": {
+        "melee": "Windklinge",
+        "ranged": "Federpfeil",
+        "special": "Sturmruf",
+        "main": "Orkan-Arie"
+      },
+      "z": {
+        "stat": "hp",
+        "v": 0.08
+      },
+      "look": {
+        "hair": "spike",
+        "weapon": "orb",
+        "cape": true
+      }
+    },
+    {
+      "id": "kasim",
+      "name": "Kasim",
+      "title": "Sandklinge",
+      "el": "yellow",
+      "rar": "R",
+      "hp": 10200,
+      "atk": 1820,
+      "def": 970,
+      "arts": {
+        "melee": "Sandhieb",
+        "ranged": "Dünenpfeil",
+        "special": "Wüstensturm",
+        "main": "Sonnenstich"
+      },
+      "z": {
+        "stat": "atk",
+        "v": 0.08
+      },
+      "look": {
+        "hair": "hood",
+        "weapon": "blade",
+        "cape": true
+      }
+    },
+    {
+      "id": "morrow",
+      "name": "Morrow",
+      "title": "Aschenpriester",
+      "el": "purple",
+      "rar": "R",
+      "hp": 11000,
+      "atk": 1650,
+      "def": 1100,
+      "arts": {
+        "melee": "Aschenstab",
+        "ranged": "Seelenfunke",
+        "special": "Grabnebel",
+        "main": "Letzte Ölung"
+      },
+      "z": {
+        "stat": "def",
+        "v": 0.08
+      },
+      "look": {
+        "hair": "hood",
+        "weapon": "orb",
+        "cape": true,
+        "build": 1.02
+      }
+    },
+    {
+      "id": "nova",
+      "name": "Nova",
+      "title": "Sternenerbin",
+      "el": "yellow",
+      "rar": "U",
+      "hp": 12200,
+      "atk": 2200,
+      "def": 1150,
+      "arts": {
+        "melee": "Sternschnuppe",
+        "ranged": "Supernova-Pfeil",
+        "special": "Gravitationsriss",
+        "main": "Urknall"
+      },
+      "z": {
+        "stat": "atk",
+        "v": 0.12
+      },
+      "look": {
+        "hair": "long",
+        "weapon": "orb",
+        "cape": true
+      }
+    },
+    {
+      "id": "sylva",
+      "name": "Sylva",
+      "title": "Urwald-Göttin",
+      "el": "green",
+      "rar": "U",
+      "hp": 13000,
+      "atk": 2080,
+      "def": 1250,
+      "arts": {
+        "melee": "Wurzelgriff",
+        "ranged": "Blütenstaub",
+        "special": "Weltenbaum-Zorn",
+        "main": "Genesis"
+      },
+      "z": {
+        "stat": "hp",
+        "v": 0.12
+      },
+      "look": {
+        "hair": "horns",
+        "weapon": "none",
+        "cape": true,
+        "build": 1.08
+      }
+    },
+    {
+      "id": "noctis",
+      "name": "Noctis",
+      "title": "Leerenkaiser",
+      "el": "purple",
+      "rar": "U",
+      "hp": 12400,
+      "atk": 2300,
+      "def": 1180,
+      "arts": {
+        "melee": "Kaiserhieb",
+        "ranged": "Leerenstrahl",
+        "special": "Thron der Nacht",
+        "main": "Ewige Finsternis"
+      },
+      "z": {
+        "stat": "atk",
+        "v": 0.12
+      },
+      "look": {
+        "hair": "horns",
+        "weapon": "blade",
+        "cape": true,
+        "build": 1.12,
+        "armor": "#160f26"
+      }
+    }
   ],
   "items": [
-    { "id": "splitter", "name": "Kristallsplitter", "stat": "atk", "v": 0.08, "price": 1500 },
-    { "id": "schild",   "name": "Aegis-Platte",     "stat": "def", "v": 0.08, "price": 1500 },
-    { "id": "herz",     "name": "Herzstein",        "stat": "hp",  "v": 0.08, "price": 1500 },
-    { "id": "kern",     "name": "Void-Kern",        "stat": "atk", "v": 0.14, "price": 4000 },
-    { "id": "mantel",   "name": "Sternenmantel",    "stat": "def", "v": 0.14, "price": 4000 },
-    { "id": "quell",    "name": "Lebensquell",      "stat": "hp",  "v": 0.14, "price": 4000 }
+    {
+      "id": "splitter",
+      "name": "Kristallsplitter",
+      "stat": "atk",
+      "v": 0.08,
+      "price": 1500
+    },
+    {
+      "id": "schild",
+      "name": "Aegis-Platte",
+      "stat": "def",
+      "v": 0.08,
+      "price": 1500
+    },
+    {
+      "id": "herz",
+      "name": "Herzstein",
+      "stat": "hp",
+      "v": 0.08,
+      "price": 1500
+    },
+    {
+      "id": "kern",
+      "name": "Void-Kern",
+      "stat": "atk",
+      "v": 0.14,
+      "price": 4000
+    },
+    {
+      "id": "mantel",
+      "name": "Sternenmantel",
+      "stat": "def",
+      "v": 0.14,
+      "price": 4000
+    },
+    {
+      "id": "quell",
+      "name": "Lebensquell",
+      "stat": "hp",
+      "v": 0.14,
+      "price": 4000
+    }
   ],
   "stages": [
-    { "name": "Ruinen von Aethel", "enemy": "Schattenwächter",  "el": "green",  "hp": 40000,  "atk": 1300, "def": 700,  "bg": ["#140a30", "#2a1250"], "grid": "#8a6bff", "cost": 6, "gold": 800,  "xp": 60,  "crystals": 30 },
-    { "name": "Kristallwüste",     "enemy": "Splitterkönigin",  "el": "yellow", "hp": 55000,  "atk": 1500, "def": 800,  "bg": ["#2a1a06", "#4a2f0a"], "grid": "#ffcf4a", "cost": 6, "gold": 1000, "xp": 80,  "crystals": 30 },
-    { "name": "Glutmeer",          "enemy": "Magmakoloss",      "el": "red",    "hp": 70000,  "atk": 1700, "def": 900,  "bg": ["#2a0608", "#4a0f14"], "grid": "#ff5a4a", "cost": 8, "gold": 1300, "xp": 100, "crystals": 40 },
-    { "name": "Tiefenkaverne",     "enemy": "Abyssaler Jäger",  "el": "blue",   "hp": 85000,  "atk": 1900, "def": 1000, "bg": ["#04132a", "#082a4a"], "grid": "#4aa8ff", "cost": 8, "gold": 1600, "xp": 130, "crystals": 40 },
-    { "name": "Leerenpforte",      "enemy": "Torwächter Nihil", "el": "purple", "hp": 100000, "atk": 2100, "def": 1100, "bg": ["#12051f", "#2a0a46"], "grid": "#c46bff", "cost": 10, "gold": 2000, "xp": 170, "crystals": 50 },
-    { "name": "Die Zitadelle",     "enemy": "Lord Vaxxor",      "el": "red",    "hp": 140000, "atk": 2500, "def": 1300, "bg": ["#1a0508", "#3a0a1a"], "grid": "#ff3b6a", "cost": 12, "gold": 3500, "xp": 260, "crystals": 100 }
+    {
+      "name": "Ruinen von Aethel",
+      "enemy": "Schattenwächter",
+      "el": "green",
+      "hp": 40000,
+      "atk": 1300,
+      "def": 700,
+      "bg": [
+        "#140a30",
+        "#2a1250"
+      ],
+      "grid": "#8a6bff",
+      "cost": 6,
+      "gold": 800,
+      "xp": 60,
+      "crystals": 30,
+      "ai": "balanced",
+      "look": {
+        "hair": "hood",
+        "weapon": "blade",
+        "cape": true,
+        "build": 1.15
+      }
+    },
+    {
+      "name": "Kristallwüste",
+      "enemy": "Splitterkönigin",
+      "el": "yellow",
+      "hp": 55000,
+      "atk": 1500,
+      "def": 800,
+      "bg": [
+        "#2a1a06",
+        "#4a2f0a"
+      ],
+      "grid": "#ffcf4a",
+      "cost": 6,
+      "gold": 1000,
+      "xp": 80,
+      "crystals": 30,
+      "ai": "sniper",
+      "look": {
+        "hair": "long",
+        "weapon": "orb",
+        "cape": true,
+        "build": 1.1
+      }
+    },
+    {
+      "name": "Glutmeer",
+      "enemy": "Magmakoloss",
+      "el": "red",
+      "hp": 70000,
+      "atk": 1700,
+      "def": 900,
+      "bg": [
+        "#2a0608",
+        "#4a0f14"
+      ],
+      "grid": "#ff5a4a",
+      "cost": 8,
+      "gold": 1300,
+      "xp": 100,
+      "crystals": 40,
+      "ai": "aggressive",
+      "look": {
+        "hair": "horns",
+        "weapon": "hammer",
+        "cape": false,
+        "build": 1.4
+      }
+    },
+    {
+      "name": "Tiefenkaverne",
+      "enemy": "Abyssaler Jäger",
+      "el": "blue",
+      "hp": 85000,
+      "atk": 1900,
+      "def": 1000,
+      "bg": [
+        "#04132a",
+        "#082a4a"
+      ],
+      "grid": "#4aa8ff",
+      "cost": 8,
+      "gold": 1600,
+      "xp": 130,
+      "crystals": 40,
+      "ai": "evasive",
+      "look": {
+        "hair": "mohawk",
+        "weapon": "blade",
+        "cape": false,
+        "build": 1.2
+      }
+    },
+    {
+      "name": "Leerenpforte",
+      "enemy": "Torwächter Nihil",
+      "el": "purple",
+      "hp": 100000,
+      "atk": 2100,
+      "def": 1100,
+      "bg": [
+        "#12051f",
+        "#2a0a46"
+      ],
+      "grid": "#c46bff",
+      "cost": 10,
+      "gold": 2000,
+      "xp": 170,
+      "crystals": 50,
+      "ai": "sniper",
+      "look": {
+        "hair": "helmet",
+        "weapon": "orb",
+        "cape": true,
+        "build": 1.25
+      }
+    },
+    {
+      "name": "Die Zitadelle",
+      "enemy": "Lord Vaxxor",
+      "el": "red",
+      "hp": 140000,
+      "atk": 2500,
+      "def": 1300,
+      "bg": [
+        "#1a0508",
+        "#3a0a1a"
+      ],
+      "grid": "#ff3b6a",
+      "cost": 12,
+      "gold": 3500,
+      "xp": 260,
+      "crystals": 100,
+      "ai": "aggressive",
+      "look": {
+        "hair": "horns",
+        "weapon": "blade",
+        "cape": true,
+        "build": 1.35,
+        "armor": "#241020"
+      }
+    },
+    {
+      "name": "Sturmplateau",
+      "enemy": "Donnerfalke Zephyra",
+      "el": "yellow",
+      "hp": 125000,
+      "atk": 2700,
+      "def": 1350,
+      "bg": [
+        "#10182a",
+        "#1f2f52"
+      ],
+      "grid": "#ffe46b",
+      "cost": 12,
+      "gold": 4200,
+      "xp": 300,
+      "crystals": 60,
+      "ai": "evasive",
+      "look": {
+        "hair": "spike",
+        "weapon": "none",
+        "cape": true,
+        "build": 1.2
+      }
+    },
+    {
+      "name": "Wurzelgrab",
+      "enemy": "Moorkoloss Brogg",
+      "el": "green",
+      "hp": 170000,
+      "atk": 2600,
+      "def": 1600,
+      "bg": [
+        "#06180e",
+        "#0f3a22"
+      ],
+      "grid": "#4aff9a",
+      "cost": 12,
+      "gold": 4800,
+      "xp": 340,
+      "crystals": 60,
+      "ai": "tank",
+      "look": {
+        "hair": "helmet",
+        "weapon": "hammer",
+        "cape": false,
+        "build": 1.5
+      }
+    },
+    {
+      "name": "Obsidian-Thron",
+      "enemy": "Schattenkönigin Veyra",
+      "el": "purple",
+      "hp": 150000,
+      "atk": 3000,
+      "def": 1400,
+      "bg": [
+        "#0e0618",
+        "#240a3c"
+      ],
+      "grid": "#d28bff",
+      "cost": 14,
+      "gold": 6000,
+      "xp": 420,
+      "crystals": 80,
+      "ai": "sniper",
+      "look": {
+        "hair": "long",
+        "weapon": "orb",
+        "cape": true,
+        "build": 1.25
+      }
+    },
+    {
+      "name": "Herz des Void",
+      "enemy": "Der Void-Titan",
+      "el": "red",
+      "hp": 260000,
+      "atk": 3300,
+      "def": 1800,
+      "bg": [
+        "#1c0408",
+        "#42081c"
+      ],
+      "grid": "#ff2d55",
+      "cost": 16,
+      "gold": 9000,
+      "xp": 600,
+      "crystals": 200,
+      "ai": "aggressive",
+      "look": {
+        "hair": "horns",
+        "weapon": "blade",
+        "cape": true,
+        "build": 1.6,
+        "armor": "#260a12"
+      }
+    }
   ],
   "banners": [
-    { "id": "std",   "name": "Standard-Portal",            "rates": { "N": 0.70, "R": 0.25, "U": 0.05 }, "featured": null },
-    { "id": "rise",  "name": "Aufstieg des Tyrannen",      "rates": { "N": 0.62, "R": 0.30, "U": 0.08 }, "featured": "ignar" },
-    { "id": "cyber", "name": "Cyber-Legenden",             "rates": { "N": 0.62, "R": 0.30, "U": 0.08 }, "featured": "x7" }
-  ]
+    {
+      "id": "std",
+      "name": "Standard-Portal",
+      "rates": {
+        "N": 0.7,
+        "R": 0.25,
+        "U": 0.05
+      },
+      "featured": null
+    },
+    {
+      "id": "rise",
+      "name": "Aufstieg des Tyrannen",
+      "rates": {
+        "N": 0.62,
+        "R": 0.3,
+        "U": 0.08
+      },
+      "featured": "ignar"
+    },
+    {
+      "id": "cyber",
+      "name": "Cyber-Legenden",
+      "rates": {
+        "N": 0.62,
+        "R": 0.3,
+        "U": 0.08
+      },
+      "featured": "x7"
+    }
+  ],
+  "aiTypes": {
+    "balanced": {
+      "label": "Ausgewogen",
+      "int": 1.0,
+      "melee": 0.45,
+      "vanish": 0.22,
+      "specialEvery": 4,
+      "dmg": 1.0,
+      "swap": 0.3
+    },
+    "aggressive": {
+      "label": "Aggressiv",
+      "int": 0.7,
+      "melee": 0.65,
+      "vanish": 0.1,
+      "specialEvery": 5,
+      "dmg": 1.0,
+      "swap": 0.15
+    },
+    "evasive": {
+      "label": "Ausweicher",
+      "int": 1.1,
+      "melee": 0.3,
+      "vanish": 0.45,
+      "specialEvery": 4,
+      "dmg": 0.95,
+      "swap": 0.4
+    },
+    "sniper": {
+      "label": "Scharfschütze",
+      "int": 0.9,
+      "melee": 0.1,
+      "vanish": 0.2,
+      "specialEvery": 3,
+      "dmg": 1.0,
+      "swap": 0.25
+    },
+    "tank": {
+      "label": "Bollwerk",
+      "int": 1.3,
+      "melee": 0.5,
+      "vanish": 0.05,
+      "specialEvery": 3,
+      "dmg": 1.3,
+      "swap": 0.1
+    }
+  },
+  "arena": {
+    "hpMul": 2.2,
+    "tiers": [
+      {
+        "id": "bronze",
+        "name": "Bronze-Liga",
+        "cost": 4,
+        "mul": 0.85,
+        "gold": 700,
+        "xp": 50,
+        "pts": 10
+      },
+      {
+        "id": "silber",
+        "name": "Silber-Liga",
+        "cost": 6,
+        "mul": 1.05,
+        "gold": 1400,
+        "xp": 90,
+        "pts": 18
+      },
+      {
+        "id": "gold",
+        "name": "Gold-Liga",
+        "cost": 8,
+        "mul": 1.3,
+        "gold": 2600,
+        "xp": 140,
+        "pts": 30
+      },
+      {
+        "id": "void",
+        "name": "Void-Liga",
+        "cost": 10,
+        "mul": 1.65,
+        "gold": 4800,
+        "xp": 220,
+        "pts": 50
+      }
+    ],
+    "ranks": [
+      [
+        0,
+        "Rekrut"
+      ],
+      [
+        100,
+        "Bronze"
+      ],
+      [
+        300,
+        "Silber"
+      ],
+      [
+        600,
+        "Gold"
+      ],
+      [
+        1000,
+        "Void-Champion"
+      ]
+    ]
+  }
 }

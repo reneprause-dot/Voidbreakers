@@ -25,6 +25,13 @@ let S = null;   // Spielstand
 const R = { w: 360, h: 640, dpr: 1, k: 1 };
 const app = $('#app'), bgc = $('#bg'), bc = $('#bc'), gc = $('#gc');
 const bgx = bgc.getContext('2d'), bcx = bc.getContext('2d'), gcx = gc.getContext('2d');
+const b3 = $('#b3');
+let S3 = null;   // Three.js-Schicht (scene3d.js); null = 2D-Fallback
+function fail3d(e) {
+  console.warn('3D deaktiviert, 2D-Fallback:', e);
+  try { if (S3) S3.setVisible(false); } catch (_) { /* egal */ }
+  S3 = null; if (typeof B !== 'undefined' && B) B.use3d = false;
+}
 let scr = 'start', tab = 'home', teamSel = null, bannerIdx = 0;
 
 /* ====================== Speicherstand (LocalStorage) ====================== */
@@ -34,12 +41,13 @@ function newSave() {
   return {
     v: 1, lvl: 1, xp: 0, energy: ENERGY_MAX, eTs: Date.now(), crystals: 1500, gold: 6000,
     owned, team: D.chars.filter(c => c.rar === 'N').map(c => c.id), main: 'kael',
-    equip: {}, items: {}, pity: 0, cleared: {}, daily: 0, guildDaily: 0, muted: false
+    equip: {}, items: {}, pity: 0, cleared: {}, daily: 0, guildDaily: 0, muted: false, arena: { pts: 0, wins: 0, losses: 0 }
   };
 }
 function load() {
   try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) { S = null; }
   if (!S || !S.v) S = newSave();
+  if (!S.arena) S.arena = { pts: 0, wins: 0, losses: 0 };
   tickEnergy();
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* privat/voll */ } }
@@ -118,6 +126,8 @@ function fit() {
     c.width = Math.round(w * R.dpr); c.height = Math.round(h * R.dpr);
     c.style.width = w + 'px'; c.style.height = h + 'px';
   });
+  b3.style.width = w + 'px'; b3.style.height = h + 'px';
+  if (S3) { try { S3.resize(w, h, R.dpr); } catch (e) { fail3d(e); } }
 }
 const setT = c => c.setTransform(R.k, 0, 0, R.k, 0, 0);
 
@@ -199,7 +209,7 @@ function vHome(v) {
 function vStory(v) {
   v.innerHTML = '<h2>Story &amp; Events</h2>' + D.stages.map((s, i) => {
     const locked = i > 0 && !S.cleared[i - 1];
-    return `<div class="row"><div><b>${i + 1}. ${s.name}</b><br><small style="color:${EL[s.el]}">${s.enemy} · ${ELN[s.el]}</small><br>
+    return `<div class="row"><div><b>${i + 1}. ${s.name}</b><br><small style="color:${EL[s.el]}">${s.enemy} · ${ELN[s.el]}</small> <small>· ${D.aiTypes[s.ai || 'balanced'].label}</small><br>
     <small>${S.cleared[i] ? '✔ geschafft' : '🪙' + s.gold + ' · 💎' + s.crystals}</small></div>
     <button class="go" data-i="${i}" ${locked ? 'disabled' : ''}>${locked ? '🔒' : '⚡' + s.cost + ' Kampf'}</button></div>`;
   }).join('');
@@ -244,10 +254,13 @@ function vSummon(v) {
 }
 function vGuild(v) {
   const today = new Date().toDateString();
-  v.innerHTML = `<h2>Gilde</h2><div class="row"><div><b>Void-Wächter</b><br><small>Lokale Demo-Gilde · 12 Mitglieder</small></div></div>
+  v.innerHTML = `<h2>Gilde &amp; Arena</h2><div class="row"><div><b>Void-Wächter</b><br><small>Lokale Demo-Gilde · 12 Mitglieder</small></div></div>
   <div class="row"><div><b>Tägliche Gildenspende</b><br><small>🪙 1000 + 💎 20</small></div><button class="btn gold" id="gd" ${S.guildDaily === today ? 'disabled' : ''}>${S.guildDaily === today ? '✔' : 'Abholen'}</button></div>
-  <div class="row"><div><b>Rangliste (Demo)</b><br><small>1. Aurex · 2. Selene · 3. Du</small></div></div>
+  <h3>Arena · PvP gegen KI-Teams</h3>
+  <div class="row"><div><b>Rang: ${[...D.arena.ranks].reverse().find(r => S.arena.pts >= r[0])[1]}</b><br><small>🏆 ${S.arena.pts} Punkte · ${S.arena.wins} Siege / ${S.arena.losses} Niederlagen</small></div></div>
+  ${D.arena.tiers.map((t, i) => `<div class="row"><div><b>${t.name}</b><br><small>3 Gegner · 🪙${t.gold} · 🏆+${t.pts}</small></div><button class="go" data-a="${i}">⚡${t.cost} Kampf</button></div>`).join('')}
   <p style="opacity:.55;font-size:1.1rem">Hinweis: Echte Multiplayer-/Gildenfunktionen benötigen ein Backend.</p>`;
+  $$('[data-a]', v).forEach(b => b.onclick = () => beginArena(D.arena.tiers[+b.dataset.a]));
   $('#gd', v).onclick = () => { S.guildDaily = today; S.gold += 1000; S.crystals += 20; save(); renderView(); toast('Spende erhalten!'); };
 }
 function vShop(v) {
@@ -377,22 +390,42 @@ function beginBattle(si) {
   const st = D.stages[si];
   if (!spendEnergy(st.cost)) return toast('Nicht genug Energie ⚡');
   save();
+  const boss = { id: 'boss_' + st.enemy, name: st.enemy, look: st.look, el: st.el };
+  launch(st, [{ c: boss, el: st.el, hp: st.hp, max: st.hp, atk: st.atk, def: st.def, name: st.enemy, ai: st.ai || 'balanced' }], { si });
+}
+// PvP-Arena: Gegner-Team aus 3 zufälligen Kämpfern, skaliert nach Liga und Spieler-Level
+function beginArena(tier) {
+  if (!spendEnergy(tier.cost)) return toast('Nicht genug Energie ⚡');
+  save();
+  const m = tier.mul * (1 + .04 * (S.lvl - 1)), pool = D.chars.slice(), team = [], ais = Object.keys(D.aiTypes);
+  while (team.length < 3) {
+    const c = pool.splice(ri(0, pool.length - 1), 1)[0], r = c.rar === 'U' ? 1.1 : c.rar === 'R' ? 1 : .92, hp = Math.round(c.hp * m * r * D.arena.hpMul);
+    team.push({ c, el: c.el, hp, max: hp, atk: Math.round(c.atk * m * r), def: Math.round(c.def * m * r), name: c.name, ai: pick(ais) });
+  }
+  const th = pick(D.stages);
+  const st = { name: 'Arena · ' + tier.name, enemy: 'Gegner-Team', el: team[0].el, hp: 0, atk: 0, def: 0, bg: th.bg, grid: th.grid, cost: tier.cost, gold: tier.gold, xp: tier.xp, crystals: 0, arena: true };
+  launch(st, team, { si: -1, arena: tier });
+}
+function launch(st, eteam, meta) {
   const team = S.team.slice(0, 3).map(id => { const c = CH(id), s = statsOf(id); return { id, c, st: { ...s }, hp: s.hp, max: s.hp }; });
   const buff = { atk: 0, def: 0, hp: 0 };
   S.team.slice(3, 6).forEach(id => { const z = CH(id).z; if (z) buff[z.stat] += z.v; });
   team.forEach(m => { m.max = Math.round(m.max * (1 + buff.hp)); m.hp = m.max; m.st.atk *= 1 + buff.atk; m.st.def *= 1 + buff.def; });
   B = {
-    si, st, team, act: 0, t: 0, over: false, rrActive: false, cine: null, hold: false,
-    enemy: { hp: st.hp, max: st.hp, el: st.el, atk: st.atk, def: st.def, name: st.enemy, vanish: 0, next: rnd(1.5, 2.4), tele: 0, telet: '', n: 0, flash: 0 },
+    si: meta.si, arena: meta.arena || null, st, team, act: 0, t: 0, over: false, rrActive: false, cine: null, hold: false,
+    enemy: { team: eteam, act: 0, hp: eteam[0].hp, max: eteam[0].max, el: eteam[0].el, atk: eteam[0].atk, def: eteam[0].def, name: eteam[0].name, c: eteam[0].c,
+      ai: D.aiTypes[eteam[0].ai] || D.aiTypes.balanced, vanish: 0, next: rnd(1.5, 2.4), tele: 0, telet: '', n: 0, flash: 0, swapCd: 0 },
     ki: 3, kiMax: 10, vg: 3, dodge: 0, dist: .7, distT: .7, px: 0, pxT: 0, ex: 0, exT: 0, hand: [newCard(), newCard(), newCard(), newCard()],
     shards: 0, swapCd: 0, blastCd: 0, proj: [], parts: [], texts: [], ev: [], shake: 0, pose: 0, ePose: 0, combo: 0, comboT: 0, flashP: 0, hint: 7
   };
   ptr = null;
+  B.use3d = !!S3;
+  if (S3) { try { S3.startBattle(B); } catch (e) { fail3d(e); } }
   $('#end').classList.add('hide'); $('#rr').classList.add('hide');
   show('battle'); beep(220, .5, 'sawtooth', .05, 300);
 }
-const pPos = () => ({ x: 140 + B.px * 60, y: 505, s: 1.6 });
-const ePos = () => { const k = 1 - B.dist; return { x: 218 + B.ex * 40 - B.px * 15, y: lerp(262, 350, k), s: lerp(.5, .88, k) }; };
+const pPos = () => (B.use3d && S3 && S3.sp.p) ? S3.sp.p : { x: 140 + B.px * 60, y: 505, s: 1.6 };
+const ePos = () => { if (B.use3d && S3 && S3.sp.e) return S3.sp.e; const k = 1 - B.dist; return { x: 218 + B.ex * 40 - B.px * 15, y: lerp(262, 350, k), s: lerp(.5, .88, k) }; };
 const addText = (s, x, y, col, size) => B.texts.push({ s: '' + s, x, y, l: 1, col, size: size || 18 });
 function burst(x, y, col, n) {
   for (let i = 0; i < n; i++) { const a = rnd(0, 6.3), v = rnd(40, 190); B.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, l: 1, m: rnd(.4, .9), c: col, r: rnd(1.5, 4) }); }
@@ -431,6 +464,18 @@ function useCard(i) {
   if (B.shards >= 7 && !B.cine) later(.5, startRush);
   else if (B.shards >= 7) { const f = B.cine.fn; B.cine.fn = () => { f(); later(.4, startRush); }; }
 }
+function swapEnemy(i) {
+  const e = B.enemy; e.team[e.act].hp = e.hp; e.act = i;
+  const m = e.team[i];
+  Object.assign(e, { hp: m.hp, max: m.max, el: m.el, atk: m.atk, def: m.def, name: m.name, c: m.c, ai: D.aiTypes[m.ai] || D.aiTypes.balanced, tele: 0, vanish: 0, next: 1.4, flash: .15, swapCd: 8 });
+  addText('GEGNER-WECHSEL', 180, 300, '#ff9d00', 20); B.shake = 10; beep(300, .25, 'sawtooth', .06, 300);
+}
+function enemyDown() {
+  const e = B.enemy; e.team[e.act].hp = 0;
+  const nx = e.team.findIndex(m => m.hp > 0);
+  if (nx < 0) return endBattle(true);
+  const p = ePos(); addText('K.O.!', p.x, p.y - 150 * p.s, '#ffd23b', 28); swapEnemy(nx);
+}
 function hitEnemy(mul, big) {
   const e = B.enemy, m = B.team[B.act], p = ePos();
   if (B.over) return;
@@ -443,7 +488,7 @@ function hitEnemy(mul, big) {
   burst(p.x, p.y - 90 * p.s, EL[m.c.el], big ? 36 : 12);
   beep(big ? 90 : 160, .15, 'square', .06, -60);
   if (mul >= 1.7 && e.tele) { e.tele = 0; e.next = 1.4; addText('UNTERBROCHEN', p.x, p.y - 170 * p.s, '#ff9d00', 13); }
-  if (e.hp <= 0) endBattle(true);
+  if (e.hp <= 0) enemyDown();
 }
 function hitPlayer(mul, big) {
   const m = B.team[B.act], e = B.enemy, p = pPos();
@@ -452,7 +497,7 @@ function hitPlayer(mul, big) {
     addText('AUSGEWICHEN!', p.x, p.y - 250, '#9fffd0', 16); B.ki = Math.min(B.kiMax, B.ki + 1); beep(900, .1, 'triangle', .04);
     return;
   }
-  const dmg = calc(e.atk, m.st.def, e.el, m.c.el, mul, .75);
+  const dmg = calc(e.atk, m.st.def, e.el, m.c.el, mul * (e.ai.dmg || 1), .75);
   m.hp = Math.max(0, m.hp - dmg); B.flashP = .2; B.combo = 0;
   B.shake = Math.max(B.shake, big ? 16 : 8);
   addText(dmg, p.x + rnd(-20, 20), p.y - 230, '#ff6a6a', big ? 26 : 18);
@@ -482,20 +527,22 @@ function enemyAI(d) {
   if (e.tele > 0) {
     e.tele -= d;
     if (e.tele <= 0) {
-      const t = e.telet; e.next = rnd(1.3, 2.4) - Math.min(.5, B.si * .08);
+      const t = e.telet; e.next = rnd(1.3, 2.4) * e.ai.int - Math.min(.5, Math.max(0, B.si) * .05);
       if (t === 'ranged') shoot('e', 1, EL[e.el], .35);
       else if (t === 'special') shoot('e', 2.1, EL[e.el], .5, true);
       else { B.dist = .1; B.distT = .1; e.pose = 1; B.ePose = 1; hitPlayer(1.15); }
     }
     return;
   }
-  e.next -= d;
+  e.next -= d; e.swapCd = Math.max(0, (e.swapCd || 0) - d);
   if (e.next <= 0) {
+    const nx = e.team.findIndex((m, i) => i !== e.act && m.hp > 0);
+    if (nx >= 0 && e.swapCd <= 0 && e.hp / e.max < .35 && Math.random() < e.ai.swap) { swapEnemy(nx); return; }
     e.n++;
-    if (B.dist < .5 && Math.random() < .45) { e.telet = 'melee'; e.tele = .6; }
-    else if (e.n % 4 === 0) { e.telet = 'special'; e.tele = 1.0; }
+    if (B.dist < .5 && Math.random() < e.ai.melee) { e.telet = 'melee'; e.tele = .6; }
+    else if (e.n % e.ai.specialEvery === 0) { e.telet = 'special'; e.tele = 1.0; }
     else { e.telet = 'ranged'; e.tele = .55; }
-    if (Math.random() < .22) { e.vanish = .4; e.exT = pick([-1, 1]); later(.6, () => { e.exT = 0; }); }
+    if (Math.random() < e.ai.vanish) { e.vanish = .4; e.exT = pick([-1, 1]); later(.6, () => { e.exT = 0; }); }
     beep(160, .25, 'sawtooth', .04, 100);
   }
 }
@@ -560,7 +607,7 @@ function rushPick(i) {
       B.cine = { t: 0, dur: 1.3, name: 'RISING RUSH', col: '#ffd23b', main: true, fn: () => {
         const e = B.enemy, p = ePos(); e.hp = Math.max(0, e.hp - dmg); B.shake = 22; B.combo += 7; B.comboT = 2.5;
         addText(dmg, p.x, p.y - 140 * p.s, '#ffd23b', 34); burst(p.x, p.y - 90 * p.s, '#ffd23b', 50); beep(70, .4, 'square', .08, -30);
-        if (e.hp <= 0) endBattle(true);
+        if (e.hp <= 0) enemyDown();
       } };
     } else renderRR(win ? 'Treffer!' : 'Gegner stärker…');
   }, 900);
@@ -572,17 +619,22 @@ function endBattle(win) {
   const st = B.st, el = $('#end');
   let html;
   if (win) {
-    const first = !S.cleared[B.si]; S.cleared[B.si] = true;
+    const first = !B.arena && !S.cleared[B.si]; if (!B.arena) S.cleared[B.si] = true;
     S.gold += st.gold; S.xp += st.xp; if (first) S.crystals += st.crystals;
+    if (B.arena) { S.arena.pts += B.arena.pts; S.arena.wins++; }
     while (S.xp >= S.lvl * 100) { S.xp -= S.lvl * 100; S.lvl++; }
     save();
-    html = `<h2 style="color:#ffd23b">SIEG!</h2><p>🪙 +${st.gold} · XP +${st.xp}</p>${first ? `<p>💎 +${st.crystals} (Erstabschluss)</p>` : ''}`;
-  } else html = '<h2 style="color:#ff4d6a">NIEDERLAGE</h2><p>Dein Team wurde besiegt.</p>';
+    html = `<h2 style="color:#ffd23b">SIEG!</h2><p>🪙 +${st.gold} · XP +${st.xp}</p>${first ? `<p>💎 +${st.crystals} (Erstabschluss)</p>` : ''}${B.arena ? `<p>🏆 +${B.arena.pts} Arena-Punkte (gesamt ${S.arena.pts})</p>` : ''}`;
+  } else {
+    if (B.arena) { S.arena.pts = Math.max(0, S.arena.pts - 5); S.arena.losses++; save(); }
+    html = '<h2 style="color:#ff4d6a">NIEDERLAGE</h2><p>Dein Team wurde besiegt.</p>' + (B.arena ? '<p>🏆 −5 Arena-Punkte</p>' : '');
+  }
   html += `<div style="display:flex;gap:.8rem;margin-top:1rem"><button class="btn" id="e1">Zum Menü</button><button class="btn alt" id="e2">Nochmal ⚡${st.cost}</button></div>`;
+  const ar = B.arena, si = B.si;
   setTimeout(() => {
     el.innerHTML = html; el.classList.remove('hide');
-    $('#e1').onclick = () => { show('menu'); setTab('story'); };
-    $('#e2').onclick = () => { if (S.energy < st.cost) return toast('Nicht genug Energie ⚡'); beginBattle(B.si); };
+    $('#e1').onclick = () => { show('menu'); setTab(ar ? 'guild' : 'story'); };
+    $('#e2').onclick = () => { if (S.energy < st.cost) return toast('Nicht genug Energie ⚡'); if (ar) beginArena(ar); else beginBattle(si); };
   }, 900);
   beep(win ? 660 : 140, .6, 'triangle', .07, win ? 500 : -60);
 }
@@ -590,6 +642,7 @@ function endBattle(win) {
 /* ---- Rendering ---- */
 function drawBattle(c) {
   const b = B; if (!b) return;
+  if (b.use3d) { c.clearRect(0, 0, 360, 640); drawFx(c, b); drawOverlay(c, b); return; }  // 3D-Szene liegt auf #b3
   const st = b.st, hor = 232, t = b.t;
   c.save();
   if (b.shake > 0) c.translate(rnd(-b.shake, b.shake) * .4, rnd(-b.shake, b.shake) * .4);
@@ -630,15 +683,20 @@ function drawBattle(c) {
   if (b.dodge > 0) { fighter(c, pp.x - b.pxT * 40, pp.y, pp.s, pc, { back: true, t, alpha: .25 }); fighter(c, pp.x - b.pxT * 20, pp.y, pp.s, pc, { back: true, t, alpha: .35 }); }
   fighter(c, pp.x, pp.y, pp.s, pc, { back: true, t, hit: b.flashP > 0, atk: b.pose, lean: -b.pxT * 1.5, charge: b.hold, alpha: b.dodge > 0 ? .55 : 1 });
 
-  // Partikel
+  drawFx(c, b);
+  c.restore();
+  drawOverlay(c, b);
+}
+// Partikel + schwebende Texte (2D-Effektschicht, in 2D- und 3D-Modus identisch)
+function drawFx(c, b) {
   c.save(); c.globalCompositeOperation = 'lighter';
   b.parts.forEach(p => { c.globalAlpha = clamp(p.l, 0, 1); c.fillStyle = p.c; c.beginPath(); c.arc(p.x, p.y, p.r, 0, 6.3); c.fill(); });
   c.restore(); c.globalAlpha = 1;
   b.texts.forEach(tx => { c.globalAlpha = clamp(tx.l * 1.5, 0, 1); c.font = `900 ${tx.size}px system-ui,sans-serif`; c.textAlign = 'center'; c.lineWidth = 4; c.strokeStyle = '#000'; c.strokeText(tx.s, tx.x, tx.y); c.fillStyle = tx.col; c.fillText(tx.s, tx.x, tx.y); });
   c.globalAlpha = 1;
-  c.restore();
-
-  // Kinematik (Cine) – Letterbox + Titel + Strahlen
+}
+// Kinematik (Letterbox, Titel, Strahlen), Treffer-Blitz und HUD
+function drawOverlay(c, b) {
   if (b.cine) {
     const k = clamp(b.cine.t / b.cine.dur, 0, 1), bar = Math.sin(k * Math.PI) * 70;
     c.fillStyle = '#000'; c.fillRect(0, 0, 360, bar); c.fillRect(0, 640 - bar, 360, bar);
@@ -660,7 +718,8 @@ function drawHUD(c) {
   c.fillStyle = 'rgba(0,0,0,.55)'; rr(c, 10, 8, 340, 24, 8); c.fill();
   c.fillStyle = EL[e.el]; rr(c, 12, 10, Math.max(0, 336 * e.hp / e.max), 20, 7); c.fill();
   c.font = '800 12px system-ui,sans-serif'; c.fillStyle = '#fff'; c.shadowColor = '#000'; c.shadowBlur = 4;
-  c.fillText(`${e.name} · ${Math.ceil(e.hp)}`, 18, 25); c.shadowBlur = 0;
+  c.fillText(`${e.name} · ${e.ai.label}`, 18, 25); c.shadowBlur = 0;
+  if (e.team.length > 1) e.team.forEach((t, i) => { c.fillStyle = i === e.act ? '#fff' : t.hp > 0 ? EL[t.el] : '#555'; c.beginPath(); c.arc(334 - i * 13, 20, 4, 0, 6.3); c.fill(); });
   // Team-Porträts
   b.team.forEach((t, i) => {
     const p = PORT(i), act = i === b.act, dead = t.hp <= 0;
@@ -757,7 +816,7 @@ function drawHome(c, dt) {
   homeT += dt; homeLean += (homeTarget - homeLean) * Math.min(1, dt * 6); homePose = Math.max(0, homePose - dt * 2);
   const m = S && CH(S.main) || { el: 'red' };
   drawSpace(c, homeT, '#0a0720', '#1d0c40');
-  if (scr === 'start' || (scr === 'menu' && tab === 'home')) {
+  if (!S3 && (scr === 'start' || (scr === 'menu' && tab === 'home'))) {
     const col = EL[m.el];
     c.save(); c.globalCompositeOperation = 'lighter';
     const g = c.createRadialGradient(180, 380, 10, 180, 380, 230); g.addColorStop(0, col + '55'); g.addColorStop(1, col + '00'); c.fillStyle = g; c.fillRect(0, 150, 360, 450); c.restore();
@@ -771,9 +830,20 @@ let last = 0;
 function loop(ts) {
   const dt = Math.min(.05, (ts - last) / 1000 || 0); last = ts;
   try {
-    if (scr === 'battle') { updateBattle(dt); setT(bcx); drawBattle(bcx); }
-    else if (scr === 'gacha') { setT(gcx); if (G) drawGacha(gcx, dt); }
-    else { setT(bgx); drawHome(bgx, dt); }
+    if (scr === 'battle') {
+      updateBattle(dt);
+      if (B && B.use3d && S3) { try { S3.setVisible(true); S3.renderBattle(B, dt); } catch (e) { fail3d(e); } }
+      else if (S3) S3.setVisible(false);
+      setT(bcx); drawBattle(bcx);
+    } else if (scr === 'gacha') { if (S3) S3.setVisible(false); setT(gcx); if (G) drawGacha(gcx, dt); }
+    else {
+      setT(bgx); drawHome(bgx, dt);
+      if (S3) {
+        if (scr === 'start' || (scr === 'menu' && tab === 'home')) {
+          try { S3.setVisible(true); S3.renderHome(homeT, CH(S.main), homeLean, homePose, scr === 'start'); } catch (e) { fail3d(e); }
+        } else S3.setVisible(false);
+      }
+    }
   } catch (err) { console.error(err); }
   requestAnimationFrame(loop);
 }
@@ -796,6 +866,10 @@ async function boot() {
   load();
   show('start');
   requestAnimationFrame(loop);
+  // 3D-Schicht asynchron laden; schlägt das fehl (kein WebGL, alter Browser) bleibt es beim 2D-Rendering
+  import('./scene3d.js').then(m => {
+    try { S3 = new m.Scene3D(b3); S3.resize(R.w, R.h, R.dpr); } catch (e) { fail3d(e); }
+  }).catch(fail3d);
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { });
 }
 boot();
