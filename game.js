@@ -27,6 +27,21 @@ const app = $('#app'), bgc = $('#bg'), bc = $('#bc'), gc = $('#gc');
 const bgx = bgc.getContext('2d'), bcx = bc.getContext('2d'), gcx = gc.getContext('2d');
 const b3 = $('#b3');
 let S3 = null;   // Three.js-Schicht (scene3d.js); null = 2D-Fallback
+// Adaptive Grafik: misst die Bildrate im 3D-Kampf und senkt bei Bedarf die Qualitätsstufe (nur im Modus "Auto")
+let gfxLevel = 0, perfAcc = 0, perfN = 0;
+function applyGfx() {
+  if (!S3 || !S) return;
+  const lvl = S.gfx === '0' || S.gfx === '1' || S.gfx === '2' ? +S.gfx : gfxLevel;
+  try { S3.setQuality(lvl); } catch (e) { fail3d(e); }
+}
+function perfMon(dt) {
+  if (!S3 || !B || B.t < 1.5 || B.cine || (S.gfx && S.gfx !== 'auto')) { perfAcc = 0; perfN = 0; return; }
+  perfAcc += dt; perfN++;
+  if (perfN >= 90) {
+    const avg = perfAcc / perfN; perfAcc = 0; perfN = 0;
+    if (avg > 1 / 42 && gfxLevel < 2) { gfxLevel++; applyGfx(); toast('Grafik automatisch reduziert'); }
+  }
+}
 function fail3d(e) {
   console.warn('3D deaktiviert, 2D-Fallback:', e);
   try { if (S3) S3.setVisible(false); } catch (_) { /* egal */ }
@@ -96,18 +111,102 @@ const adv = (a, b) => D.elements[a].beats === b ? 1.3 : D.elements[b].beats === 
 const calc = (att, def, e1, e2, mul, scale) => Math.max(1, Math.round(att * mul * adv(e1, e2) * rnd(.9, 1.1) * scale * (1000 / (1000 + def * .5))));
 const usedItems = () => { const u = {}; Object.values(S.equip).forEach(a => a.forEach(i => { if (i) u[i] = (u[i] || 0) + 1; })); return u; };
 
-/* ====================== Sound (WebAudio, prozedural) ====================== */
-let AC = null;
+/* ====================== Sound (WebAudio, komplett prozedural) ====================== */
+let AC = null, noiseBuf = null;
+function ac() {
+  if (AC) return AC;
+  try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; }
+  return AC;
+}
 function beep(f = 440, d = .08, type = 'sine', v = .05, slide = 0) {
   if (S && S.muted) return;
   try {
-    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
-    const o = AC.createOscillator(), g = AC.createGain(), t0 = AC.currentTime;
+    const a = ac(); if (!a) return;
+    const o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime;
     o.type = type; o.frequency.setValueAtTime(f, t0);
     if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + d);
     g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + d);
-    o.connect(g); g.connect(AC.destination); o.start(); o.stop(t0 + d);
+    o.connect(g); g.connect(a.destination); o.start(); o.stop(t0 + d);
   } catch (e) { /* kein Audio */ }
+}
+// Rauschstoß (Treffer, Explosionen): gefiltertes weißes Rauschen
+function noise(d = .15, v = .08, f = 900, q = 1) {
+  if (S && S.muted) return;
+  try {
+    const a = ac(); if (!a) return;
+    if (!noiseBuf) { noiseBuf = a.createBuffer(1, a.sampleRate * .5, a.sampleRate); const ch = noiseBuf.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1; }
+    const s = a.createBufferSource(), fl = a.createBiquadFilter(), g = a.createGain(), t0 = a.currentTime;
+    s.buffer = noiseBuf; fl.type = 'bandpass'; fl.frequency.value = f; fl.Q.value = q;
+    g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + d);
+    s.connect(fl); fl.connect(g); g.connect(a.destination); s.start(); s.stop(t0 + d);
+  } catch (e) { /* kein Audio */ }
+}
+// Benannte Effekte aus Beeps + Rauschen
+const SFX = {
+  hit: () => { noise(.1, .09, 1400); beep(170, .12, 'square', .05, -90); },
+  bigHit: () => { noise(.35, .16, 500, .7); beep(90, .3, 'sawtooth', .08, -55); beep(55, .4, 'sine', .12, -25); },
+  blast: () => { noise(.14, .04, 3000, 2); beep(620, .16, 'square', .03, -380); },
+  hurt: () => { noise(.18, .1, 700); beep(110, .18, 'square', .06, -60); },
+  dodge: () => { noise(.12, .05, 5000, 2); beep(700, .1, 'sine', .04, 500); },
+  card: () => beep(520, .06, 'triangle', .05, 260),
+  shard: () => { beep(900, .1, 'triangle', .05, 450); setTimeout(() => beep(1350, .12, 'triangle', .04), 70); },
+  charge: () => beep(260, .6, 'sawtooth', .05, 800),
+  ko: () => { noise(.5, .14, 400); [392, 330, 262].forEach((f, i) => setTimeout(() => beep(f, .25, 'triangle', .07), i * 110)); },
+  win: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, .3, 'triangle', .07), i * 120)),
+  lose: () => [330, 294, 247, 196].forEach((f, i) => setTimeout(() => beep(f, .35, 'sawtooth', .05), i * 160)),
+  ui: () => beep(500, .05, 'sine', .04)
+};
+const sfx = n => { try { SFX[n] && SFX[n](); } catch (e) { /* egal */ } };
+
+// ---- Musik: Pad + Arpeggio (Menü), Kick + Bass + Arpeggio (Kampf) in a-Moll – F – C – G ----
+let mus = null;
+const ROOTS = [110, 87.31, 130.81, 98], TRIADS = [[0, 3, 7], [0, 4, 7], [0, 4, 7], [0, 4, 7]];
+function note(a, dest, type, f, t, dur, vol, slide) {
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(25, f + slide), t + dur);
+  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + .02);
+}
+function musicMode(mode) {
+  if (mus && mus.mode === mode) return;
+  stopMusic();
+  if (!mode || (S && S.muted)) return;
+  const a = ac(); if (!a) return;
+  try {
+    const g = a.createGain(); g.gain.value = .0001; g.connect(a.destination);
+    g.gain.linearRampToValueAtTime(.55, a.currentTime + 1.5);
+    mus = { mode, g, step: 0, next: a.currentTime + .1 };
+  } catch (e) { mus = null; }
+}
+function stopMusic() {
+  if (!mus) return;
+  const old = mus; mus = null;
+  try { old.g.gain.cancelScheduledValues(AC.currentTime); old.g.gain.linearRampToValueAtTime(.0001, AC.currentTime + .35); } catch (e) { /* egal */ }
+  setTimeout(() => { try { old.g.disconnect(); } catch (e) { /* egal */ } }, 600);
+}
+function musicTick() {   // wird pro Frame aufgerufen; plant Noten ~0.35 s im Voraus
+  if (!mus || !AC || (S && S.muted)) return;
+  const battle = mus.mode === 'battle', sp = 60 / (battle ? 132 : 78) / 2;
+  let guard = 0;
+  while (mus.next < AC.currentTime + .35 && guard++ < 16) {
+    const s = mus.step++, t = mus.next, bar = Math.floor(s / 8) % 4, root = ROOTS[bar], tri = TRIADS[bar], d = mus.g; mus.next += sp;
+    if (battle) {
+      if (s % 2 === 0) note(AC, d, 'sine', 130, t, .14, .5, -95);                              // Kick
+      note(AC, d, 'sawtooth', root, t, sp * .9, s % 2 ? .05 : .09);                            // Bass-Puls
+      note(AC, d, 'square', root * 4 * Math.pow(2, tri[[0, 1, 2, 1, 0, 2, 1, 2][s % 8]] / 12), t, sp * .8, .025);   // Arpeggio
+      if (s % 2) note(AC, d, 'square', 7000, t, .03, .012);                                     // Hi-Hat
+    } else {
+      if (s % 8 === 0) tri.forEach((iv, i) => { note(AC, d, 'sawtooth', root * 2 * Math.pow(2, iv / 12) * (i % 2 ? 1.004 : .996), t, sp * 8, .028); });   // Pad
+      if (s % 4 === 0) note(AC, d, 'sine', root, t, sp * 3.5, .12);                              // Bass
+      note(AC, d, 'triangle', root * 4 * Math.pow(2, tri[[0, 2, 1, 2][s % 4]] / 12), t, sp * 1.6, .04);               // Arpeggio
+    }
+  }
+}
+function setMuted(m, v) {
+  S.muted = m; save();
+  if (m) stopMusic(); else musicMode(scr === 'battle' ? 'battle' : scr === 'menu' ? 'menu' : null);
+  if (v) vShop(v);
 }
 let toastT = 0;
 function toast(msg) {
@@ -181,6 +280,7 @@ function fighter(c, x, y, s, col, o) {
 /* ====================== Navigation ====================== */
 function show(id) {
   scr = id;
+  musicMode(id === 'battle' ? 'battle' : id === 'menu' ? 'menu' : null);
   ['start', 'menu', 'battle', 'gacha'].forEach(s => $('#' + s).classList.toggle('hide', s !== id));
 }
 function setTab(t) {
@@ -268,8 +368,14 @@ function vShop(v) {
   v.innerHTML = `<h2>Shop</h2>
   <div class="row"><div><b>Tägliche Kristalle</b><br><small>💎 100 gratis</small></div><button class="btn gold" id="sd" ${S.daily === today ? 'disabled' : ''}>${S.daily === today ? '✔' : 'Abholen'}</button></div>
   <div class="row"><div><b>Energie auffüllen</b><br><small>⚡ +30</small></div><button class="btn" id="se">💎 40</button></div>
+  <h3>Einstellungen</h3>
+  <div class="row" style="flex-direction:column;align-items:stretch"><b>Grafik</b><div class="tabs" id="gfx">${[['auto', 'Auto'], ['0', 'Hoch'], ['1', 'Mittel'], ['2', 'Niedrig']].map(([k, l]) => `<button data-g="${k}" class="${(S.gfx || 'auto') === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+  <small>${S3 ? '3D aktiv' : '2D-Modus (kein WebGL)'} · Auto senkt die Qualität bei niedriger Bildrate</small></div>
+  <div class="row"><div><b>Ton</b><br><small>Musik &amp; Effekte</small></div><button class="btn" id="snd">${S.muted ? '🔇 Aus' : '🔊 An'}</button></div>
   <h3>Ausrüstung</h3>${D.items.map(i => `<div class="row"><div><b>${i.name}</b><br><small>+${Math.round(i.v * 100)}% ${STAT_N[i.stat]} · besitzt ${S.items[i.id] || 0} (verbaut ${u[i.id] || 0})</small></div>
   <button class="btn" data-i="${i.id}">🪙 ${i.price}</button></div>`).join('')}`;
+  $$('#gfx button', v).forEach(b => b.onclick = () => { S.gfx = b.dataset.g; save(); applyGfx(); vShop(v); });
+  $('#snd', v).onclick = () => setMuted(!S.muted, v);
   $('#sd', v).onclick = () => { S.daily = today; S.crystals += 100; save(); renderView(); toast('+100 💎'); };
   $('#se', v).onclick = () => {
     if (S.crystals < 40) return toast('Zu wenig Kristalle');
@@ -439,16 +545,16 @@ function shoot(own, mul, col, dur, big) {
     own, mul, col, dur, t: 0, big: !!big,
     x0: a.x + (own === 'p' ? 25 : 0), y0: a.y - 120 * a.s, x1: b.x, y1: b.y - 105 * b.s
   });
-  beep(own === 'p' ? 520 : 300, .12, 'square', .03, -200);
+  sfx('blast');
 }
 function useCard(i) {
   if (B.over || B.rrActive || B.cine) return;
   const cd = B.hand[i]; if (!cd || cd.cd > 0) return;
   const inf = cardInfo(cd);
   if (B.ki < inf.cost) { addText('KI ZU NIEDRIG', 180, 470, '#ff8080', 14); beep(120, .1, 'square'); return; }
-  B.ki -= inf.cost;
+  B.ki -= inf.cost; sfx('card');
   const type = cd.type;
-  if (cd.shard) { B.shards = Math.min(7, B.shards + 1); addText('◆ SCHERBE', 180, 440, '#ffd23b', 14); beep(900, .1, 'triangle', .05, 400); }
+  if (cd.shard) { B.shards = Math.min(7, B.shards + 1); addText('◆ SCHERBE', 180, 440, '#ffd23b', 14); sfx('shard'); }
   B.hand[i] = newCard(); B.hand[i].cd = .8;
   const m = B.team[B.act], col = EL[m.c.el];
   if (type === 'melee') {
@@ -459,7 +565,7 @@ function useCard(i) {
   } else {
     const main = type === 'main';
     B.cine = { t: 0, dur: main ? 1.5 : 1.0, name: inf.name, col, main, fn: () => { B.pose = 1; hitEnemy(inf.p, true); if (main) B.ki = Math.min(B.kiMax, B.ki + 2); } };
-    beep(260, B.cine.dur, 'sawtooth', .06, 700);
+    sfx('charge');
   }
   if (B.shards >= 7 && !B.cine) later(.5, startRush);
   else if (B.shards >= 7) { const f = B.cine.fn; B.cine.fn = () => { f(); later(.4, startRush); }; }
@@ -474,19 +580,19 @@ function enemyDown() {
   const e = B.enemy; e.team[e.act].hp = 0;
   const nx = e.team.findIndex(m => m.hp > 0);
   if (nx < 0) return endBattle(true);
-  const p = ePos(); addText('K.O.!', p.x, p.y - 150 * p.s, '#ffd23b', 28); swapEnemy(nx);
+  const p = ePos(); addText('K.O.!', p.x, p.y - 150 * p.s, '#ffd23b', 28); sfx('ko'); swapEnemy(nx);
 }
 function hitEnemy(mul, big) {
   const e = B.enemy, m = B.team[B.act], p = ePos();
   if (B.over) return;
   if (e.vanish > 0) { addText('AUSGEWICHEN', p.x, p.y - 150 * p.s, '#9fc8ff', 14); return; }
-  const dmg = calc(m.st.atk, e.def, m.c.el, e.el, mul, 2.4);
+  const dmg = calc(m.st.atk, e.def, m.c.el, e.el, mul, D.balance.playerDmg);
   e.hp = Math.max(0, e.hp - dmg); e.flash = .15; e.hit = .15;
   B.combo++; B.comboT = 2.2;
   B.shake = Math.max(B.shake, big ? 16 : 5);
   addText(dmg, p.x + rnd(-20, 20), p.y - 130 * p.s, adv(m.c.el, e.el) > 1 ? '#ffd23b' : '#fff', big ? 30 : 20);
   burst(p.x, p.y - 90 * p.s, EL[m.c.el], big ? 36 : 12);
-  beep(big ? 90 : 160, .15, 'square', .06, -60);
+  sfx(big ? 'bigHit' : 'hit');
   if (mul >= 1.7 && e.tele) { e.tele = 0; e.next = 1.4; addText('UNTERBROCHEN', p.x, p.y - 170 * p.s, '#ff9d00', 13); }
   if (e.hp <= 0) enemyDown();
 }
@@ -494,14 +600,14 @@ function hitPlayer(mul, big) {
   const m = B.team[B.act], e = B.enemy, p = pPos();
   if (B.over) return;
   if (B.dodge > 0) {
-    addText('AUSGEWICHEN!', p.x, p.y - 250, '#9fffd0', 16); B.ki = Math.min(B.kiMax, B.ki + 1); beep(900, .1, 'triangle', .04);
+    addText('AUSGEWICHEN!', p.x, p.y - 250, '#9fffd0', 16); B.ki = Math.min(B.kiMax, B.ki + 1); sfx('dodge');
     return;
   }
-  const dmg = calc(e.atk, m.st.def, e.el, m.c.el, mul * (e.ai.dmg || 1), .75);
+  const dmg = calc(e.atk, m.st.def, e.el, m.c.el, mul * (e.ai.dmg || 1), D.balance.enemyDmg);
   m.hp = Math.max(0, m.hp - dmg); B.flashP = .2; B.combo = 0;
   B.shake = Math.max(B.shake, big ? 16 : 8);
   addText(dmg, p.x + rnd(-20, 20), p.y - 230, '#ff6a6a', big ? 26 : 18);
-  burst(p.x, p.y - 150, '#ff6a6a', 14); beep(110, .15, 'square', .06, -50);
+  burst(p.x, p.y - 150, '#ff6a6a', 14); sfx('hurt');
   if (m.hp <= 0) {
     const nx = B.team.findIndex(x => x.hp > 0);
     if (nx < 0) return endBattle(false);
@@ -519,7 +625,7 @@ function dodgeSwipe(dir) {
   if (B.over || B.rrActive || B.cine) return;
   if (B.vg < 1) { addText('AUSWEICH-LEISTE LEER', 180, 470, '#ff8080', 13); return; }
   B.vg -= 1; B.dodge = .45; B.pxT = dir; later(.45, () => { B.pxT = 0; });
-  beep(700, .1, 'sine', .04, 500);
+  sfx('dodge');
 }
 function enemyAI(d) {
   const e = B.enemy;
@@ -603,7 +709,7 @@ function rushPick(i) {
     r.round++; r.lock = false;
     if (r.round >= 3) {
       $('#rr').classList.add('hide'); B.rrActive = false;
-      const dmg = Math.round(r.wins * B.enemy.max * .1 + m.st.atk * 4);
+      const dmg = Math.round(r.wins * B.enemy.max * D.balance.rushPct + m.st.atk * D.balance.rushAtk);
       B.cine = { t: 0, dur: 1.3, name: 'RISING RUSH', col: '#ffd23b', main: true, fn: () => {
         const e = B.enemy, p = ePos(); e.hp = Math.max(0, e.hp - dmg); B.shake = 22; B.combo += 7; B.comboT = 2.5;
         addText(dmg, p.x, p.y - 140 * p.s, '#ffd23b', 34); burst(p.x, p.y - 90 * p.s, '#ffd23b', 50); beep(70, .4, 'square', .08, -30);
@@ -636,7 +742,7 @@ function endBattle(win) {
     $('#e1').onclick = () => { show('menu'); setTab(ar ? 'guild' : 'story'); };
     $('#e2').onclick = () => { if (S.energy < st.cost) return toast('Nicht genug Energie ⚡'); if (ar) beginArena(ar); else beginBattle(si); };
   }, 900);
-  beep(win ? 660 : 140, .6, 'triangle', .07, win ? 500 : -60);
+  sfx(win ? 'win' : 'lose');
 }
 
 /* ---- Rendering ---- */
@@ -830,9 +936,10 @@ let last = 0;
 function loop(ts) {
   const dt = Math.min(.05, (ts - last) / 1000 || 0); last = ts;
   try {
+    musicTick();
     if (scr === 'battle') {
       updateBattle(dt);
-      if (B && B.use3d && S3) { try { S3.setVisible(true); S3.renderBattle(B, dt); } catch (e) { fail3d(e); } }
+      if (B && B.use3d && S3) { try { S3.setVisible(true); S3.renderBattle(B, dt); perfMon(dt); } catch (e) { fail3d(e); } }
       else if (S3) S3.setVisible(false);
       setT(bcx); drawBattle(bcx);
     } else if (scr === 'gacha') { if (S3) S3.setVisible(false); setT(gcx); if (G) drawGacha(gcx, dt); }
@@ -852,7 +959,7 @@ $('#start').addEventListener('pointerdown', () => {
   if (AC && AC.state === 'suspended') AC.resume();
   show('menu'); setTab('home');
 });
-$$('#nav button').forEach(b => b.onclick = () => { const m = $('#modal'); if (m) m.remove(); setTab(b.dataset.t); beep(500, .05); });
+$$('#nav button').forEach(b => b.onclick = () => { const m = $('#modal'); if (m) m.remove(); setTab(b.dataset.t); sfx('ui'); });
 setInterval(() => { if (scr === 'menu' && S) renderTop(); }, 1000);
 
 async function boot() {
@@ -868,7 +975,11 @@ async function boot() {
   requestAnimationFrame(loop);
   // 3D-Schicht asynchron laden; schlägt das fehl (kein WebGL, alter Browser) bleibt es beim 2D-Rendering
   import('./scene3d.js').then(m => {
-    try { S3 = new m.Scene3D(b3); S3.resize(R.w, R.h, R.dpr); } catch (e) { fail3d(e); }
+    try {
+      S3 = new m.Scene3D(b3); S3.resize(R.w, R.h, R.dpr);
+      if ((navigator.hardwareConcurrency || 8) <= 4) gfxLevel = 1;   // schwächere Geräte starten gleich mittel
+      applyGfx();
+    } catch (e) { fail3d(e); }
   }).catch(fail3d);
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { });
 }

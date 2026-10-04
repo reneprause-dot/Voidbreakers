@@ -147,7 +147,7 @@ export class Scene3D {
     const r = this.r;
     r.setClearColor(0x000000, 0);
     if (r.shadowMap) { r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; }
-    r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.15;
+    r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.15; this.q = 0;
     this.cam = new THREE.PerspectiveCamera(48, 360 / 640, .1, 220);
     this.glowT = glowTex();
     this.fighters = new Map();
@@ -158,8 +158,22 @@ export class Scene3D {
     this.setupHome();
   }
   resize(w, h, dpr) {
-    this.r.setPixelRatio(Math.min(dpr, 1.5)); this.r.setSize(w, h, false);
+    this.W = w; this.H = h; this.dpr = dpr;
+    this.r.setPixelRatio(Math.min(dpr, [1.5, 1, .75][this.q || 0])); this.r.setSize(w, h, false);
     this.cam.aspect = w / h; this.cam.updateProjectionMatrix();
+  }
+  // Grafikstufen: 0 hoch (Schatten 1024, bis 1.5x Auflösung), 1 mittel (Schatten 512, 1x), 2 niedrig (keine Schatten, 0.75x)
+  setQuality(q) {
+    this.q = q; const on = q < 2, size = q === 0 ? 1024 : 512;
+    if (this.r.shadowMap) this.r.shadowMap.enabled = on;
+    [this.home, this.battle].forEach(sc => sc.traverse(o => {
+      if (o.isLight && o.shadow) {
+        o.castShadow = on;
+        if (o.shadow.mapSize.x !== size) { o.shadow.mapSize.set(size, size); if (o.shadow.map) { o.shadow.map.dispose(); o.shadow.map = null; } }
+      }
+      if (o.material) [].concat(o.material).forEach(m => { m.needsUpdate = true; });
+    }));
+    if (this.W) this.resize(this.W, this.H, this.dpr);
   }
   setVisible(v) { this.canvas.style.display = v ? 'block' : 'none'; }
   fighter(char, el, tag = '') {   // tag trennt Rollen, damit Spieler und Gegner nie dasselbe Modell teilen
@@ -239,7 +253,7 @@ export class Scene3D {
     sc.add(g);
     // Licht
     sc.add(new THREE.HemisphereLight(bg1.clone().lerp(new THREE.Color(0xffffff), .35), 0x0a0818, 1.15));
-    const key = new THREE.DirectionalLight(0xfff0e0, 2.3); key.position.set(-5, 9, 7); key.castShadow = true; key.shadow.mapSize.set(1024, 1024);
+    const key = new THREE.DirectionalLight(0xfff0e0, 2.3); key.position.set(-5, 9, 7); key.castShadow = (this.q || 0) < 2; key.shadow.mapSize.set(this.q ? 512 : 1024, this.q ? 512 : 1024);
     Object.assign(key.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 34 }); key.shadow.bias = -.0006; sc.add(key); sc.add(key.target);
     const eRim = new THREE.PointLight(new THREE.Color(EL[st.el]), 60, 28, 2), pRim = new THREE.PointLight(new THREE.Color(EL[b.team[0].c.el]), 25, 20, 2);
     sc.add(eRim); sc.add(pRim);

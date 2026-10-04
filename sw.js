@@ -1,6 +1,6 @@
 // Service Worker: Offline-Fähigkeit (stale-while-revalidate)
 // Bei Änderungen an Dateien die Versionsnummer erhöhen.
-const V = 'voidbreakers-v2';
+const V = 'voidbreakers-v3';
 const FILES = ['./', 'index.html', 'style.css', 'game.js', 'data.json', 'manifest.json', 'icon-192.png', 'icon-512.png', 'scene3d.js', 'vendor/three.module.js', 'vendor/three.core.js'];
 
 self.addEventListener('install', e => {
