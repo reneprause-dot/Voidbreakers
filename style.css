@@ -1,0 +1,85 @@
+/* 1rem = 10 Design-Pixel bei 360px Breite (wird per JS skaliert) */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+canvas{touch-action:none;position:absolute;left:0;top:0;display:block}
+html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#eaf0ff}
+body{display:flex;align-items:center;justify-content:center}
+#app{position:relative;overflow:hidden;background:#07060f}
+.screen{position:absolute;inset:0}
+.hide{display:none!important}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+
+/* Start */
+#start{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:rgba(4,2,14,.3);z-index:5}
+#start h1{font-size:4rem;letter-spacing:.35rem;margin:0;font-weight:900;text-shadow:0 0 2.4rem #7b5cff}
+#start h1 span{display:block;color:#ff4d6a;letter-spacing:.5rem;font-size:3.2rem}
+#start .sub{opacity:.7;letter-spacing:.3rem;font-size:1.3rem;margin:1rem 0 12rem}
+#start .tap{font-size:1.8rem;font-weight:800;animation:bl 1.2s infinite}
+#start .snd{opacity:.5;font-size:1.1rem}
+@keyframes bl{50%{opacity:.25}}
+
+/* Menü */
+#menu{z-index:2}
+#top{position:absolute;left:0;right:0;top:0;height:5rem;display:flex;gap:.5rem;align-items:center;padding:0 .8rem;background:linear-gradient(#000c,#0000);font-size:1.2rem;font-weight:700;z-index:3}
+#top div{background:#0007;border:1px solid #fff2;border-radius:2rem;padding:.5rem .8rem;white-space:nowrap}
+#top small{opacity:.6;margin-left:.3rem;font-weight:500}
+#view{position:absolute;left:0;right:0;top:5rem;bottom:6.4rem;overflow-y:auto;padding:0 1rem 1rem}
+#view.home{pointer-events:none}
+#nav{position:absolute;left:0;right:0;bottom:0;height:6.4rem;display:flex;background:linear-gradient(#0000,#000d 40%);border-top:1px solid #fff2;z-index:3}
+#nav button{flex:1;background:none;font-size:2.2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:.55}
+#nav button small{font-size:.95rem;margin-top:.1rem}
+#nav button.on{opacity:1;color:#ffd23b;text-shadow:0 0 1rem #ffd23b}
+.homeinfo{position:absolute;left:0;right:0;bottom:1rem;text-align:center;text-shadow:0 0 1rem #000}
+.homeinfo .nm{font-size:3rem;font-weight:900;letter-spacing:.2rem}
+.homeinfo .tt{opacity:.8;font-size:1.4rem}
+.homeinfo .el{font-weight:800;margin-top:.3rem}
+.homeinfo .hint{opacity:.5;font-size:1.1rem}
+
+.row{display:flex;justify-content:space-between;align-items:center;gap:.8rem;background:#12102aee;border:1px solid #fff2;border-radius:1rem;padding:1rem 1.2rem;margin:.8rem 0}
+.row small{opacity:.75}
+.go,.btn{background:linear-gradient(#7b5cff,#4a2fd0);border-radius:1rem;padding:.9rem 1.3rem;font-weight:800;font-size:1.3rem}
+.btn.alt{background:linear-gradient(#ff4d6a,#c0203e)}
+.btn.gold{background:linear-gradient(#ffd23b,#c88a00);color:#201400}
+.btn:disabled,.go:disabled{opacity:.4}
+h2,h3{margin:1rem 0 .6rem}
+h2{font-size:2rem}h3{font-size:1.5rem}
+p{margin:.4rem 0}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem}
+.cc{position:relative;background:#12102aee;border:2px solid #fff3;border-radius:1rem;padding:.6rem;text-align:center;font-size:1.1rem;min-height:11rem;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
+.cc .pt{position:absolute;inset:0 0 3.4rem;display:flex;align-items:center;justify-content:center;font-size:4.4rem;font-weight:900;opacity:.9}
+.cc.lock{filter:grayscale(1) brightness(.5)}
+.team{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.6rem}
+.slot{background:#0008;border:2px dashed #fff4;border-radius:.8rem;padding:.6rem .3rem;text-align:center;font-size:1.1rem;min-height:5rem}
+.slot.sel{border-color:#ffd23b;box-shadow:0 0 1rem #ffd23b88}
+.slot.bench{border-style:dotted}
+.tabs{display:flex;gap:.5rem;margin:.6rem 0}
+.tabs button{flex:1;padding:.7rem .3rem;border-radius:.8rem;background:#1b1840;font-size:1.1rem;font-weight:700;opacity:.7}
+.tabs button.on{opacity:1;background:#4a2fd0}
+
+.modal{position:absolute;inset:0;background:#000d;z-index:20;overflow-y:auto;padding:1.4rem}
+.modal .box{background:#12102a;border:1px solid #fff3;border-radius:1.2rem;padding:1.2rem}
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;max-width:26rem;margin:.6rem auto}
+.sn{padding:1rem .2rem;border-radius:.8rem;background:#1b1840;border:2px solid #fff3;font-size:1.1rem;text-align:center}
+.sn.on{background:#3b2fa0;border-color:#ffd23b}
+.sn.can{border-color:#6fff9f}
+.stat{display:flex;justify-content:space-between;font-size:1.3rem;padding:.2rem 0}
+.eq{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}
+.eq button{background:#1b1840;border:2px solid #fff3;border-radius:.8rem;padding:.8rem .2rem;font-size:1.05rem;min-height:5rem}
+
+/* Kampf-Overlays */
+#battle{background:#000;z-index:4}
+#rr,#end,#gres{position:absolute;inset:0;background:#000c;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.2rem;gap:.8rem}
+#rr h2{font-size:3rem;color:#ffd23b;text-shadow:0 0 2rem #ff9d00;margin:0}
+.rcards{display:flex;gap:1rem;margin:1.2rem 0}
+.rc{width:9.4rem;height:13rem;border-radius:1rem;font-size:3.8rem;font-weight:900;background:linear-gradient(#2a1f6b,#14102f);border:2px solid #ffd23b}
+.rc.win{border-color:#6fff9f;color:#6fff9f}
+.rc.lose{border-color:#ff4d6a;color:#ff4d6a}
+#end h2{font-size:3.6rem;margin:0}
+#gacha{background:#000;z-index:4}
+.rg{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;width:100%}
+.rg.one{grid-template-columns:1fr;max-width:16rem}
+.rc2{border:2px solid;border-radius:.8rem;background:#12102a;padding:.6rem .2rem;font-size:1rem;text-align:center;display:flex;flex-direction:column;gap:.3rem}
+.rg.one .rc2{font-size:1.6rem;padding:2rem .6rem}
+
+#toast{position:absolute;left:50%;top:9rem;transform:translateX(-50%);background:#000d;border:1px solid #fff4;border-radius:2rem;padding:.8rem 1.6rem;font-size:1.3rem;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50;white-space:nowrap}
+#toast.on{opacity:1}

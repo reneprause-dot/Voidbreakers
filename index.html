@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#07060f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+<title>VOIDBREAKERS</title>
+</head>
+<body>
+<div id="app">
+  <canvas id="bg"></canvas>
+
+  <!-- Startbildschirm -->
+  <section id="start" class="screen">
+    <h1>VOID<span>BREAKERS</span></h1>
+    <p class="sub">Kosmische Legenden</p>
+    <p class="tap">▶ TIPPEN ZUM STARTEN</p>
+    <p class="snd">🔊 Ton wird aktiviert</p>
+  </section>
+
+  <!-- Menü -->
+  <section id="menu" class="screen hide">
+    <header id="top"></header>
+    <main id="view"></main>
+    <nav id="nav">
+      <button data-t="story">⚔<small>Kämpfen</small></button>
+      <button data-t="chars">👤<small>Kämpfer</small></button>
+      <button data-t="home" class="home">⌂<small>Home</small></button>
+      <button data-t="summon">✦<small>Beschwören</small></button>
+      <button data-t="guild">🛡<small>Gilde</small></button>
+      <button data-t="shop">💎<small>Shop</small></button>
+    </nav>
+  </section>
+
+  <!-- Kampf -->
+  <section id="battle" class="screen hide">
+    <canvas id="bc"></canvas>
+    <div id="rr" class="hide"></div>
+    <div id="end" class="hide"></div>
+  </section>
+
+  <!-- Beschwörung -->
+  <section id="gacha" class="screen hide">
+    <canvas id="gc"></canvas>
+    <div id="gres" class="hide"></div>
+  </section>
+
+  <div id="toast"></div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
